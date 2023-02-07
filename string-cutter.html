@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>文本分行</title>
+		<style type="text/css">
+			body{
+			}
+		</style>
+	</head>
+	<body>
+		<div class="textInput">
+			<h1>待分行文本：</h1>
+			<textarea id="inputOrigText" , cols=80 rows=16></textarea>
+		</div>
+
+		<div class="insertRule">
+			<h1>分行规则：</h1>
+			<p id="ruleShow"></p>
+		</div>
+
+		<div class="textOutput">
+			<button onclick="exeInsert()">分行</button>
+			<h1>分行结果：</h1>
+			<textarea id="result" cols=80 rows=20></textarea>
+		</div>
+
+
+		<script>
+			var newLineNums1131 = [
+				[2, "报文长度（报文头开始）"],
+				[5, "报文类型"],
+				[23, "（报文头结束） "],
+				[27, "车票主类型 - 类型 - 子类型 - 票卡芯片类型（ 包体开始） "],
+				[31, ""],
+				[35, ""],
+				[39, ""],
+				[46, "交易日期时间"],
+				[66, "主账户 "],
+				[68, ""],
+				[70, ""],
+				[72, "2 磁道数据长度 "],
+				[90, "2磁道数据"],
+				[92, "IC卡数据长度"],
+				[205, "IC卡数据"],
+				[207, "银联预授权数据长度"],
+				[442, "银联预授权数据"],
+				[443, "特定运营类型"],
+				[458, "保留（包体结束）"],
+				[474, "包尾"]
+			]; // 1131
+			document.getElementById("ruleShow").innerHTML = newLineNums1131;
+
+			function trimAnyBlank(str, is_global) {
+				var result;
+				result = str.replace(/(^\s+)|(\s+$)/g, "");
+				console.log(result)
+				if (is_global.toLowerCase() == "g") {
+					result = result.replace(/\s/g, "");
+				}
+				return result;
+			}
+
+			function insertStr(src, start, newStr) {
+				return src.slice(0, start) + newStr + src.slice(start);
+			}
+
+			function deleteAllBlank(str) {
+				str = str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+				console.log(str)
+			}
+
+			function exeInsert() {
+				var origString = trimAnyBlank(document.getElementById("inputOrigText").value, "g");
+
+				var multi = 2;
+				var insertedText = "";
+				for (let i = newLineNums1131.length - 1; i >= 0; i--) {
+					origString = insertStr(origString, newLineNums1131[i][0] * multi, " // "+newLineNums1131[i][1] + "\n");
+					console.log(newLineNums1131[i][0])
+				}
+				document.getElementById("result").value = origString;
+			}
+		</script>
+	</body>
+</html>
