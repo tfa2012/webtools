@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>文本分行</title>
+		<style type="text/css">
+			body {}
+		</style>
+	</head>
+	<body>
+		<div class="textInput">
+			<h1>待分行文本：</h1>
+			<textarea id="inputOrigText" , cols=80 rows=16></textarea>
+		</div>
+
+		<div class="insertRule">
+			<h1>分行规则：</h1>
+			<div class="D-drop-f-box">
+				<form>
+					<select id="selectedItem" , onchange="selectChanged()">
+						<option value="msg1131">1131</option>
+						<option value="unionpayDataFormat1">银联预授权数据（格式1）</option>
+					</select>
+				</form>
+			</div>
+			<p id="ruleShow"></p>
+		</div>
+
+		<div class="textOutput">
+			<button onclick="exeInsert()">分行</button>
+			<h1>分行结果：</h1>
+			<textarea id="result" cols=80 rows=20></textarea>
+		</div>
+
+
+		<script>
+			var newLineNums1131 = [
+				[2, "报文长度（报文头开始）"],
+				[5, "报文类型"],
+				[23, "（报文头结束） "],
+				[27, "车票主类型 - 类型 - 子类型 - 票卡芯片类型（ 包体开始） "],
+				[31, ""],
+				[35, ""],
+				[39, ""],
+				[46, "交易日期时间"],
+				[66, "主账户 "],
+				[68, ""],
+				[70, ""],
+				[72, "2 磁道数据长度 "],
+				[90, "2磁道数据"],
+				[92, "IC卡数据长度"],
+				[205, "IC卡数据"],
+				[207, "银联预授权数据长度"],
+				[442, "银联预授权数据"],
+				[443, "特定运营类型"],
+				[458, "保留（包体结束）"],
+				[474, "包尾"]
+			]; // 1131
+
+			var newLineUnionpayDataFormat1 = [
+					[2, "消息类型"],
+					[10, "位元表"],
+					[19, "【长度】主账号"],
+					[22, "交易处理码"],
+					[28, "交易金额"],
+					[31, "受卡方跟踪号"],
+					[40, "【长度】进站站点"],
+					[47, "进站时间"],
+					[49, "固定值072"],
+					[51, ""],
+					[52, "固定值06"],
+					[70, "（35域）【长度】2磁道数据"],
+					[78, "（41域）受卡方终端标识码"],
+					[93, "（42域）受卡方标识码"],
+					[101, "（43域）受卡方系统标识"],
+					[104, "（49域）交易货币代码，固定字符串156"],
+					[106, "（55域）长度"],
+					[117, "应用密文"],
+					[121, "应用信息数据"],
+					[143, ""],
+					[150, ""],
+					[155, ""],
+					[170, ""],
+					[188, ""],
+					[193, ""],
+					[208, ""],
+					[219, "接口设备序列号"],
+					[227, "自定义域"],
+					[235, "MAC"],]; // 银联预授权数据（格式1）
+
+					var newLineNums = newLineNums1131;
+					showRule();
+
+					function showRule() {
+						var ruleString = "";
+						for (var i = 0; i < newLineNums.length; i++) {
+							ruleString += newLineNums[i][0] + " | " + newLineNums[i][1] + "<br>";
+						}
+						document.getElementById("ruleShow").innerHTML = ruleString;
+					}
+
+					console.log(newLineNums.length);
+
+					function trimAnyBlank(str, is_global) {
+						var result;
+						result = str.replace(/(^\s+)|(\s+$)/g, "");
+						console.log(result)
+						if (is_global.toLowerCase() == "g") {
+							result = result.replace(/\s/g, "");
+						}
+						return result;
+					}
+
+					function insertStr(src, start, newStr) {
+						return src.slice(0, start) + newStr + src.slice(start);
+					}
+
+					function deleteAllBlank(str) {
+						str = str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+					}
+
+					function selectChanged() {
+						let currSelectValue = document.getElementById("selectedItem").value;
+						if (currSelectValue == "msg1131") {
+							newLineNums = newLineNums1131;
+							showRule();
+						} else if (currSelectValue == "unionpayDataFormat1") {
+							newLineNums = newLineUnionpayDataFormat1;
+							showRule();
+						}
+					}
+
+					function exeInsert() {
+						var origString = trimAnyBlank(document.getElementById("inputOrigText").value, "g");
+
+						var multi = 2;
+						var insertedText = "";
+						for (let i = newLineNums.length - 1; i >= 0; i--) {
+							origString = insertStr(origString, newLineNums[i][0] * multi, " // " + newLineNums[i][1] +
+								"\n");
+						}
+						document.getElementById("result").value = origString;
+					}
+		</script>
+	</body>
+</html>
