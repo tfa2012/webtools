@@ -5,7 +5,29 @@
 		<title>文本分行</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link href="css/entireframework.min.css" rel="stylesheet" type="text/css">
-		<style>
+		<style type="text/css">
+			/* 		.container {
+				position: relative;
+			} */
+
+			.container .left {
+				width: 50%;
+				float: left;
+				/* position: relative; */
+			}
+
+			.container .right {
+				width: 45%;
+				float: right;
+				/* position: relative; */
+			}
+
+			textarea {
+				-webkit-appearance: none;
+				height: 30em;
+				width: 100%;
+			}
+
 			h1 {
 				margin: 0.2em 0;
 				border-bottom: 2px solid;
@@ -21,32 +43,31 @@
 			</div>
 		</nav>
 
-		<dir class="container">
-			<div class="textInput">
-				<h1>待分行文本</h1>
-				<textarea id="inputOrigText" cols=80 rows=16></textarea>
-			</div>
-
-			<div class="insertRule">
-				<h1>分行规则</h1>
-				<div>
-					<form>
-						<select id="selectedItem" , onchange="selectChanged()">
-							<option value="msg1131">1131-银联实体卡进站请求</option>
-							<option value="unionpayPreAuthDataFormat1">银联预授权数据（格式1）</option>
-							<option value="unionpayTxnDataFormat">金融IC卡交易数据格式</option>
-						</select>
-					</form>
+		<div class="container">
+			<h1>待分行文本</h1>
+			<div class="container">
+				<div class="left">
+					<textarea id="inputOrigText"  style='height:420px; resize: none;'></textarea>
 				</div>
-				<p id="ruleShow"></p>
+
+				<div class="right">
+					<strong>分行规则：</strong>
+					<select id="selectedItem" , onchange="selectChanged()">
+						<option value="msg1131">1131-银联实体卡进站请求</option>
+						<option value="unionpayPreAuthDataFormat1">银联预授权数据（格式1）</option>
+						<option value="unionpayTxnDataFormat">金融IC卡交易数据格式</option>
+					</select>
+					<textarea style='height:381px; resize: none;' id="ruleShow"></textarea>
+
+				</div>
 			</div>
 
-			<div class="textOutput">
+			<div>
 				<button class="btn btn-b" onclick="exeInsert()">开始分行</button>
 				<h1>分行结果</h1>
 				<textarea id="result" cols=80 rows=20></textarea>
 			</div>
-		</dir>
+		</div>
 
 		<script>
 			var newLineNums1131 = [
@@ -137,7 +158,7 @@
 			function showRule() {
 				var ruleString = "";
 				for (var i = 0; i < newLineNums.length; i++) {
-					ruleString += newLineNums[i][0] + " | " + newLineNums[i][1] + "<br>";
+					ruleString += newLineNums[i][0] + " | " + newLineNums[i][1] + "\n";
 				}
 				document.getElementById("ruleShow").innerHTML = ruleString;
 			}

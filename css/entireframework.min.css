@@ -150,13 +150,10 @@ input:focus,
 select:focus {
  border-color:#5ab
 }
+textarea,
 input[type=text] {
  -webkit-appearance:none;
  width:13em
-}
-textarea {
- -webkit-appearance:none;
- width:50em
 }
 .addon {
  padding:8px 12px;
