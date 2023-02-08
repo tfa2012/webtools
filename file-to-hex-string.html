@@ -1,183 +1,193 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <title>打开文件</title>
-        <script src="converters/hex.js" type="text/javascript" charset="utf-8"></script>
+	<head>
+		<meta charset="utf-8">
+		<title>文件以十六进制显示</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link href="css/entireframework.min.css" rel="stylesheet" type="text/css">
 
-        <script src="cm/codemirror.min.js"></script>
-        <script src="cm/simplescrollbars.js"></script>
-        <link rel="stylesheet" href="cm/codemirror.min.css">
-        <link rel="stylesheet" href="cm/simplescrollbars.css">
-        <script src="cm/mode/javascript/javascript.js"></script>
+		<script src="cm/codemirror.min.js"></script>
+		<script src="cm/simplescrollbars.js"></script>
+		<link rel="stylesheet" href="cm/codemirror.min.css">
+		<link rel="stylesheet" href="cm/simplescrollbars.css">
+		<script src="cm/mode/javascript/javascript.js"></script>
 
-        <style>
-            #selectArea {
-                border: dashed 1px rgba(0, 0, 0, 0.5);
-                border-radius: 8px;
-                margin: 1em;
-                padding: 2em;
-            }
+		<script src="converters/hex.js" type="text/javascript" charset="utf-8"></script>
+		<style>
+			#selectArea {
+				border: dashed 1px rgba(0, 0, 0, 0.5);
+				border-radius: 8px;
+				margin: 1em;
+				padding: 2em;
+			}
 
-            #resultArea {
-                border: dashed 2px rgba(255, 0, 0, 0.5);
-                border-radius: 4px;
-                margin: 1em;
-                padding: 1em;
-            }
+			#resultArea {
+				border: dashed 2px rgba(255, 0, 0, 0.5);
+				border-radius: 4px;
+				margin: 1em;
+				padding: 1em;
+			}
 
-            #uploadProgress {
-                position: relative;
-                width: 100%;
-                height: 30px;
-                background-color: #ddd;
-            }
+			#uploadProgress {
+				position: relative;
+				width: 100%;
+				height: 30px;
+				background-color: #ddd;
+			}
 
-            #upload {
-                position: absolute;
-                width: 0%;
-                height: 100%;
-                background-color: #4CAF50;
-            }
+			#upload {
+				position: absolute;
+				width: 0%;
+				height: 100%;
+				background-color: #4CAF50;
+			}
 
-            #uploadLabel {
-                text-align: center;
-                line-height: 30px;
-                color: white;
-            }
+			#uploadLabel {
+				text-align: center;
+				line-height: 30px;
+				color: white;
+			}
 
-            .drag-active {
-                background: rgba(255, 255, 0, 0.1);
-            }
+			.drag-active {
+				background: rgba(255, 255, 0, 0.1);
+			}
 
-            .drag-over {
-                background: rgba(255, 255, 0, 0.5);
-            }
+			.drag-over {
+				background: rgba(255, 255, 0, 0.5);
+			}
 
-            .drag-leave {
-                background: rgba(255, 255, 255, 1);
-            }
-        </style>
-    </head>
-    <body>
-        <div>
-            <h1 align="center">文件以十六进制（Hex String）显示</h1>
-        </div>
+			.drag-leave {
+				background: rgba(255, 255, 255, 1);
+			}
+		</style>
+	</head>
+	<body>
+		<nav class="nav" tabindex="-1" onclick="this.focus()">
+			<div class="container">
+				<a class="pagename current" href="index.html">在线工具</a>
+			</div>
+		</nav>
 
-        <div id="selectArea" ondrop="drop(event, this.id)" ondragover="allowDropOver(event, this.id)"
-            ondragleave="allowDropLeave(event, this.id)">
-            <p>打开需要解析的文件（或直接将文件拖拽到这儿）：</p>
-            <input id="selectFile" type="file">
-            <p id="dragFile"></p>
-            <div id="uploadProgress">
-                <div id="upload">
-                    <div id="uploadLabel">0%</div>
-                </div>
-            </div>
-        </div>
+		<dir class="container">
+			<div>
+				<h1 align="center">文件以十六进制（Hex String）显示</h1>
+			</div>
 
-        <p id="parseResult"></p>
+			<div id="selectArea" ondrop="drop(event, this.id)" ondragover="allowDropOver(event, this.id)"
+				ondragleave="allowDropLeave(event, this.id)">
+				<p>打开需要解析的文件（或直接将文件拖拽到这儿）：</p>
+				<input id="selectFile" type="file">
+				<p id="dragFile"></p>
+				<div id="uploadProgress">
+					<div id="upload">
+						<div id="uploadLabel">0%</div>
+					</div>
+				</div>
+			</div>
 
-        <div id="resultArea">
-            <p id = "filenameArea"></p>
-            <p>输出的十六进制数据（一行32字节）</p>
-            <textarea id="code" name="code"></textarea>
-        </div>
+			<p id="parseResult"></p>
 
-        <script>
-            var cmEditor = CodeMirror.fromTextArea(document.getElementById("code"), {
-                mode: "javascript",
-                lineNumbers: true,
-                scrollbarStyle: "simple",
-                smartIndent: true
-            });
+			<div id="resultArea">
+				<p id="filenameArea"></p>
+				<p>输出的十六进制数据（一行32字节）</p>
+				<textarea id="code" name="code"></textarea>
+			</div>
+			</div>
 
-            let files = document.getElementById("selectFile");
+			<script>
+				var cmEditor = CodeMirror.fromTextArea(document.getElementById("code"), {
+					mode: "javascript",
+					lineNumbers: true,
+					scrollbarStyle: "simple",
+					smartIndent: true
+				});
 
-            // 文件拖拽
-            function allowDropOver(ev, select) {
-                ev.preventDefault();
-                console.log("文件到头上了，准备解析！");
-                document.getElementById(select).className = "drag-over";
-            }
+				let files = document.getElementById("selectFile");
 
-            function allowDropLeave(ev, select) {
-                ev.preventDefault();
-                console.log("离开");
-                document.getElementById(select).className = "drag-leave";
-            }
+				// 文件拖拽
+				function allowDropOver(ev, select) {
+					ev.preventDefault();
+					console.log("文件到头上了，准备解析！");
+					document.getElementById(select).className = "drag-over";
+				}
 
-            function drop(ev, select) {
-                ev.preventDefault();
-                document.getElementById(select).className = "drag-active";
-                if (ev.dataTransfer.files.length == 0) {
-                    console.log('请选择文件！');
-                    return;
-                }
+				function allowDropLeave(ev, select) {
+					ev.preventDefault();
+					console.log("离开");
+					document.getElementById(select).className = "drag-leave";
+				}
 
-                fileParser(ev.dataTransfer.files[0]);
-                document.getElementById("selectFile").value = ''; // 拖拽时让选择文件后面的值为‘空’
-            }
+				function drop(ev, select) {
+					ev.preventDefault();
+					document.getElementById(select).className = "drag-active";
+					if (ev.dataTransfer.files.length == 0) {
+						console.log('请选择文件！');
+						return;
+					}
 
-            files.onchange = function(e) {
-                if (e.target.files.length == 0) {
-                    console.log('请选择文件！');
-                    return;
-                }
+					fileParser(ev.dataTransfer.files[0]);
+					document.getElementById("selectFile").value = ''; // 拖拽时让选择文件后面的值为‘空’
+				}
 
-                fileParser(e.target.files[0]);
-            }
+				files.onchange = function(e) {
+					if (e.target.files.length == 0) {
+						console.log('请选择文件！');
+						return;
+					}
 
-            function fileParser(firstFile) {
-                document.getElementById("dragFile").innerHTML = firstFile.name;
-                const reader = new FileReader();
-                reader.readAsArrayBuffer(firstFile);
-                var fileSize = firstFile.size;
+					fileParser(e.target.files[0]);
+				}
 
-                reader.onerror = function() {
-                    console.log("读取文件错误");
-                }
+				function fileParser(firstFile) {
+					document.getElementById("dragFile").innerHTML = firstFile.name;
+					const reader = new FileReader();
+					reader.readAsArrayBuffer(firstFile);
+					var fileSize = firstFile.size;
 
-                reader.onprogress = function(e) {
-                    console.log("读取文件过程 " + e.loaded + " bytes");
-                    document.getElementById("upload").style.width = '100%';
-                    document.getElementById("uploadLabel").innerHTML = '100%';
-                }
+					reader.onerror = function() {
+						console.log("读取文件错误");
+					}
 
-                reader.onload = function() {
-                    const bytes = new Uint8Array(reader.result);
-                    const READ_BYTE_COUNT = 32;
+					reader.onprogress = function(e) {
+						console.log("读取文件过程 " + e.loaded + " bytes");
+						document.getElementById("upload").style.width = '100%';
+						document.getElementById("uploadLabel").innerHTML = '100%';
+					}
 
-                    let hexString = "";
-                    let codeHexString = "";
+					reader.onload = function() {
+						const bytes = new Uint8Array(reader.result);
+						const READ_BYTE_COUNT = 32;
 
-                    for (let i = 0; i < bytes.length; ) {
-                        const byteSlice = bytes.slice(i, i + READ_BYTE_COUNT);
-                        hexString += bytesToHex(byteSlice);
-                        hexString += "<br>"
-                        i += READ_BYTE_COUNT
+						let hexString = "";
+						let codeHexString = "";
 
-                        for (let j = 0; j < byteSlice.length;) {
-                            const byteSlice2Byte = byteSlice.slice(j, j + 1);
-                            codeHexString += bytesToHex(byteSlice2Byte);
-                            codeHexString += ' ';
-                            j += 1;
-                        }
-                        codeHexString += '\n';
+						for (let i = 0; i < bytes.length;) {
+							const byteSlice = bytes.slice(i, i + READ_BYTE_COUNT);
+							hexString += bytesToHex(byteSlice);
+							hexString += "<br>"
+							i += READ_BYTE_COUNT
 
-                        let readPercent = i / bytes.length * 100;
-                        if (readPercent > 100) {
-                            readPercent = 100;
-                        }
-                        document.getElementById("upload").style.width = readPercent + '%';
-                        document.getElementById("uploadLabel").innerHTML = readPercent + '%';
-                    }
-                    document.getElementById("filenameArea").innerHTML = "文件大小：" + bytes.length + "字节";
+							for (let j = 0; j < byteSlice.length;) {
+								const byteSlice2Byte = byteSlice.slice(j, j + 1);
+								codeHexString += bytesToHex(byteSlice2Byte);
+								codeHexString += ' ';
+								j += 1;
+							}
+							codeHexString += '\n';
 
-                    // document.getElementById("parseResult").innerHTML = hexString;
-                    cmEditor.setValue(codeHexString);
-                };
-            }
-        </script>
-    </body>
+							let readPercent = i / bytes.length * 100;
+							if (readPercent > 100) {
+								readPercent = 100;
+							}
+							document.getElementById("upload").style.width = readPercent + '%';
+							document.getElementById("uploadLabel").innerHTML = readPercent + '%';
+						}
+						document.getElementById("filenameArea").innerHTML = "文件大小：" + bytes.length + "字节";
+
+						// document.getElementById("parseResult").innerHTML = hexString;
+						cmEditor.setValue(codeHexString);
+					};
+				}
+			</script>
+	</body>
 </html>
