@@ -4,7 +4,8 @@
 		<meta charset="utf-8">
 		<title>文件以十六进制显示</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<link href="css/entireframework.min.css" rel="stylesheet" type="text/css">
+		<link href="css/normalize.css" rel="stylesheet" type="text/css">
+		<link href="css/milligram.min.css" rel="stylesheet" type="text/css">
 
 		<script src="cm/codemirror.min.js"></script>
 		<script src="cm/simplescrollbars.js"></script>
@@ -64,11 +65,13 @@
 	<body>
 		<nav class="nav" tabindex="-1" onclick="this.focus()">
 			<div class="container">
-				<a class="pagename current" href="index.html">在线工具</a>
+				<a href="index.html">
+					<h1>返回首页</h1>
+				</a>
 			</div>
 		</nav>
 
-		<dir class="container">
+		<div class="container">
 			<div>
 				<h1 align="center">文件以十六进制（Hex String）显示</h1>
 			</div>
@@ -92,102 +95,102 @@
 				<p>输出的十六进制数据（一行32字节）</p>
 				<textarea id="code" name="code"></textarea>
 			</div>
-			</div>
+		</div>
 
-			<script>
-				var cmEditor = CodeMirror.fromTextArea(document.getElementById("code"), {
-					mode: "javascript",
-					lineNumbers: true,
-					scrollbarStyle: "simple",
-					smartIndent: true
-				});
+		<script>
+			var cmEditor = CodeMirror.fromTextArea(document.getElementById("code"), {
+				mode: "javascript",
+				lineNumbers: true,
+				scrollbarStyle: "simple",
+				smartIndent: true
+			});
 
-				let files = document.getElementById("selectFile");
+			let files = document.getElementById("selectFile");
 
-				// 文件拖拽
-				function allowDropOver(ev, select) {
-					ev.preventDefault();
-					console.log("文件到头上了，准备解析！");
-					document.getElementById(select).className = "drag-over";
+			// 文件拖拽
+			function allowDropOver(ev, select) {
+				ev.preventDefault();
+				console.log("文件到头上了，准备解析！");
+				document.getElementById(select).className = "drag-over";
+			}
+
+			function allowDropLeave(ev, select) {
+				ev.preventDefault();
+				console.log("离开");
+				document.getElementById(select).className = "drag-leave";
+			}
+
+			function drop(ev, select) {
+				ev.preventDefault();
+				document.getElementById(select).className = "drag-active";
+				if (ev.dataTransfer.files.length == 0) {
+					console.log('请选择文件！');
+					return;
 				}
 
-				function allowDropLeave(ev, select) {
-					ev.preventDefault();
-					console.log("离开");
-					document.getElementById(select).className = "drag-leave";
+				fileParser(ev.dataTransfer.files[0]);
+				document.getElementById("selectFile").value = ''; // 拖拽时让选择文件后面的值为‘空’
+			}
+
+			files.onchange = function(e) {
+				if (e.target.files.length == 0) {
+					console.log('请选择文件！');
+					return;
 				}
 
-				function drop(ev, select) {
-					ev.preventDefault();
-					document.getElementById(select).className = "drag-active";
-					if (ev.dataTransfer.files.length == 0) {
-						console.log('请选择文件！');
-						return;
-					}
+				fileParser(e.target.files[0]);
+			}
 
-					fileParser(ev.dataTransfer.files[0]);
-					document.getElementById("selectFile").value = ''; // 拖拽时让选择文件后面的值为‘空’
+			function fileParser(firstFile) {
+				document.getElementById("dragFile").innerHTML = firstFile.name;
+				const reader = new FileReader();
+				reader.readAsArrayBuffer(firstFile);
+				var fileSize = firstFile.size;
+
+				reader.onerror = function() {
+					console.log("读取文件错误");
 				}
 
-				files.onchange = function(e) {
-					if (e.target.files.length == 0) {
-						console.log('请选择文件！');
-						return;
-					}
-
-					fileParser(e.target.files[0]);
+				reader.onprogress = function(e) {
+					console.log("读取文件过程 " + e.loaded + " bytes");
+					document.getElementById("upload").style.width = '100%';
+					document.getElementById("uploadLabel").innerHTML = '100%';
 				}
 
-				function fileParser(firstFile) {
-					document.getElementById("dragFile").innerHTML = firstFile.name;
-					const reader = new FileReader();
-					reader.readAsArrayBuffer(firstFile);
-					var fileSize = firstFile.size;
+				reader.onload = function() {
+					const bytes = new Uint8Array(reader.result);
+					const READ_BYTE_COUNT = 32;
 
-					reader.onerror = function() {
-						console.log("读取文件错误");
-					}
+					let hexString = "";
+					let codeHexString = "";
 
-					reader.onprogress = function(e) {
-						console.log("读取文件过程 " + e.loaded + " bytes");
-						document.getElementById("upload").style.width = '100%';
-						document.getElementById("uploadLabel").innerHTML = '100%';
-					}
+					for (let i = 0; i < bytes.length;) {
+						const byteSlice = bytes.slice(i, i + READ_BYTE_COUNT);
+						hexString += bytesToHex(byteSlice);
+						hexString += "<br>"
+						i += READ_BYTE_COUNT
 
-					reader.onload = function() {
-						const bytes = new Uint8Array(reader.result);
-						const READ_BYTE_COUNT = 32;
-
-						let hexString = "";
-						let codeHexString = "";
-
-						for (let i = 0; i < bytes.length;) {
-							const byteSlice = bytes.slice(i, i + READ_BYTE_COUNT);
-							hexString += bytesToHex(byteSlice);
-							hexString += "<br>"
-							i += READ_BYTE_COUNT
-
-							for (let j = 0; j < byteSlice.length;) {
-								const byteSlice2Byte = byteSlice.slice(j, j + 1);
-								codeHexString += bytesToHex(byteSlice2Byte);
-								codeHexString += ' ';
-								j += 1;
-							}
-							codeHexString += '\n';
-
-							let readPercent = i / bytes.length * 100;
-							if (readPercent > 100) {
-								readPercent = 100;
-							}
-							document.getElementById("upload").style.width = readPercent + '%';
-							document.getElementById("uploadLabel").innerHTML = readPercent + '%';
+						for (let j = 0; j < byteSlice.length;) {
+							const byteSlice2Byte = byteSlice.slice(j, j + 1);
+							codeHexString += bytesToHex(byteSlice2Byte);
+							codeHexString += ' ';
+							j += 1;
 						}
-						document.getElementById("filenameArea").innerHTML = "文件大小：" + bytes.length + "字节";
+						codeHexString += '\n';
 
-						// document.getElementById("parseResult").innerHTML = hexString;
-						cmEditor.setValue(codeHexString);
-					};
-				}
-			</script>
+						let readPercent = i / bytes.length * 100;
+						if (readPercent > 100) {
+							readPercent = 100;
+						}
+						document.getElementById("upload").style.width = readPercent + '%';
+						document.getElementById("uploadLabel").innerHTML = readPercent + '%';
+					}
+					document.getElementById("filenameArea").innerHTML = "文件大小：" + bytes.length + "字节";
+
+					// document.getElementById("parseResult").innerHTML = hexString;
+					cmEditor.setValue(codeHexString);
+				};
+			}
+		</script>
 	</body>
 </html>
