@@ -4,166 +4,71 @@
 		<meta charset="utf-8">
 		<title>文本分行</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<link href="css/entireframework.min.css" rel="stylesheet" type="text/css">
-		<style type="text/css">
-			/* 		.container {
-				position: relative;
-			} */
-
-			.container .left {
-				width: 50%;
-				float: left;
-				/* position: relative; */
-			}
-
-			.container .right {
-				width: 45%;
-				float: right;
-				/* position: relative; */
-			}
-
-			textarea {
-				-webkit-appearance: none;
-				height: 30em;
-				width: 100%;
-			}
-
-			h1 {
-				margin: 0.2em 0;
-				border-bottom: 2px solid;
-				margin-bottom: 15px;
-				padding-bottom: 5px;
-			}
-		</style>
+		<link href="css/normalize.css" rel="stylesheet" type="text/css">
+		<link href="css/milligram.min.css" rel="stylesheet" type="text/css">
+		<script src="./.config/string-cutter.defs.js"></script>
 	</head>
 	<body>
 		<nav class="nav" tabindex="-1" onclick="this.focus()">
 			<div class="container">
-				<a class="pagename current" href="index.html">在线工具</a>
+				<a href="index.html">
+					<h1>返回首页</h1>
+				</a>
 			</div>
 		</nav>
 
 		<div class="container">
-			<h1>待分行文本</h1>
-			<div class="container">
-				<div class="left">
-					<textarea id="inputOrigText"  style='height:420px; resize: none;'></textarea>
+			<div class="row">
+				<div class="column">
+					<strong>1、输入需要分行的内容</strong>
+					<textarea id="inputOrigText" style='height:420px; resize: none;'></textarea>
 				</div>
 
-				<div class="right">
-					<strong>分行规则：</strong>
-					<select id="selectedItem" , onchange="selectChanged()">
-						<option value="msg1131">1131-银联实体卡进站请求</option>
-						<option value="unionpayPreAuthDataFormat1">银联预授权数据（格式1）</option>
-						<option value="unionpayTxnDataFormat">金融IC卡交易数据格式</option>
-					</select>
-					<textarea style='height:381px; resize: none;' id="ruleShow"></textarea>
+				<div class="column">
+					<strong>2、选择分行规则</strong>
+					<select id="ruleSelecter" , onchange="selectChanged()"> </select>
+					<p>是否加倍（与下列规则的字符数相乘）<select id="multipleNumber">
+						<option value="1">x1</option>
+						<option value="2" selected>x2</option>
+						<option value="4">x4</option>
+					</select></p>
+					<textarea style='height:400px; border: 0; resize: none;' id="ruleShow"></textarea>
 
 				</div>
 			</div>
 
 			<div>
-				<button class="btn btn-b" onclick="exeInsert()">开始分行</button>
-				<h1>分行结果</h1>
-				<textarea id="result" cols=80 rows=20></textarea>
+				<p align="center"><button onclick="exeInsert()">开始分行</button></p>
+				<strong>分行结果</strong>
+				<textarea id="result" style="height: 400px;"></textarea>
 			</div>
 		</div>
 
 		<script>
-			var newLineNums1131 = [
-				[2, "报文长度（报文头开始）"],
-				[5, "报文类型"],
-				[23, "（报文头结束） "],
-				[27, "车票主类型 - 类型 - 子类型 - 票卡芯片类型（ 包体开始） "],
-				[31, ""],
-				[35, ""],
-				[39, ""],
-				[46, "交易日期时间"],
-				[66, "主账户 "],
-				[68, ""],
-				[70, ""],
-				[72, "2 磁道数据长度 "],
-				[90, "2磁道数据"],
-				[92, "IC卡数据长度"],
-				[205, "IC卡数据"],
-				[207, "银联预授权数据长度"],
-				[442, "银联预授权数据"],
-				[443, "特定运营类型"],
-				[458, "保留（包体结束）"],
-				[474, "包尾"]
-			]; // 1131
+			console.log(defs);
 
-			var newLineunionpayPreAuthDataFormat1 = [
-				[2, "消息类型"],
-				[10, "位元表"],
-				[19, "【长度】主账号"],
-				[22, "交易处理码"],
-				[28, "交易金额"],
-				[31, "受卡方跟踪号"],
-				[40, "【长度】进站站点"],
-				[47, "进站时间"],
-				[49, "固定值072"],
-				[51, ""],
-				[52, "固定值06"],
-				[70, "（35域）【长度】2磁道数据"],
-				[78, "（41域）受卡方终端标识码"],
-				[93, "（42域）受卡方标识码"],
-				[101, "（43域）受卡方系统标识"],
-				[104, "（49域）交易货币代码，固定字符串156"],
-				[106, "（55域）长度"],
-				[117, "应用密文"],
-				[121, "应用信息数据"],
-				[143, ""],
-				[150, ""],
-				[155, ""],
-				[170, ""],
-				[188, ""],
-				[193, ""],
-				[208, ""],
-				[219, "接口设备序列号"],
-				[227, "自定义域"],
-				[235, "MAC"],
-			]; // 银联预授权数据（格式1）
+			var ruleCurrent; // 当前选择的规则（在defs.js中的数组定义）
+			initialRulsSelection();
 
-			var newLineunionpayTxnDataFormat = [
-				[5, "交易类型-车票主类型-类型-子类型-票卡芯片类型"],
-				[13, "SAM卡号"],
-				[17, "SAM卡流水号"],
-				[24, "交易日期时间"],
-				[28, "当前车站"],
-				[32, "终端设备标识"],
-				[36, "终端设备流水号"],
-				[40, "交易金额"],
-				[41, "模式ID"],
-				[45, ""],
-				[46, ""],
-				[47, "支付方式"],
-				[51, ""],
-				[52, "班次类型"],
-				[54, "卡有效期"],
-				[74, "账户号"],
-				[76, "2磁道数据长度"],
-				[114, "2磁道数据"],
-				[116, "IC卡数据长度"],
-				[371, "IC卡数据域内容 "],
-				[373, "卡序列号 "],
-				[473, "备注 "],
-				[474, "特定运营模式 "],
-				[527, "保留"],
-			]; // 银联预授权数据（格式1）
-
-			var newLineNums = newLineNums1131;
-			showRule();
-
-			function showRule() {
-				var ruleString = "";
-				for (var i = 0; i < newLineNums.length; i++) {
-					ruleString += newLineNums[i][0] + " | " + newLineNums[i][1] + "\n";
+			function initialRulsSelection() {
+				for (let [k, v] of defs.getMap()) {
+					document.getElementById("ruleSelecter").options.add(new Option(k, k));
 				}
-				document.getElementById("ruleShow").innerHTML = ruleString;
+				showRule();
 			}
 
-			console.log(newLineNums.length);
+			function showRule() {
+				let objSelecter = document.getElementById("ruleSelecter");
+				let ruleName = objSelecter.options[objSelecter.selectedIndex].text;
+				ruleCurrent = defs.getMap().get(ruleName);
+
+				let ruleString = "";
+				for (var i = 0; i < ruleCurrent.length; i++) {
+					ruleString += ruleCurrent[i][0] + " | " + ruleCurrent[i][1] + "\n";
+				}
+
+				document.getElementById("ruleShow").innerHTML = ruleString;;
+			}
 
 			function trimAnyBlank(str, is_global) {
 				var result;
@@ -184,24 +89,18 @@
 			}
 
 			function selectChanged() {
-				let currSelectValue = document.getElementById("selectedItem").value;
-				if (currSelectValue == "msg1131") {
-					newLineNums = newLineNums1131;
-				} else if (currSelectValue == "unionpayPreAuthDataFormat1") {
-					newLineNums = newLineunionpayPreAuthDataFormat1;
-				} else if (currSelectValue == "unionpayTxnDataFormat") {
-					newLineNums = newLineunionpayTxnDataFormat;
-				}
 				showRule();
 			}
 
 			function exeInsert() {
-				var origString = trimAnyBlank(document.getElementById("inputOrigText").value, "g");
 
-				var multi = 2;
-				var insertedText = "";
-				for (let i = newLineNums.length - 1; i >= 0; i--) {
-					origString = insertStr(origString, newLineNums[i][0] * multi, " // " + newLineNums[i][1] +
+				let multipleSelecter = document.getElementById("multipleNumber");
+				let multi = multipleSelecter.options[multipleSelecter.selectedIndex].value;
+				console.log(multi);
+
+				var origString = trimAnyBlank(document.getElementById("inputOrigText").value, "g");
+				for (let i = ruleCurrent.length - 1; i >= 0; i--) {
+					origString = insertStr(origString, ruleCurrent[i][0] * multi, " // " + ruleCurrent[i][1] +
 						"\n");
 				}
 				document.getElementById("result").value = origString;
