@@ -92,7 +92,7 @@
 
 			<div id="resultArea">
 				<p id="filenameArea"></p>
-				<p>输出的十六进制数据（一行32字节）</p>
+				<p>输出的十六进制数据（一行16字节）</p>
 				<textarea id="code" name="code"></textarea>
 			</div>
 		</div>
@@ -159,7 +159,7 @@
 
 				reader.onload = function() {
 					const bytes = new Uint8Array(reader.result);
-					const READ_BYTE_COUNT = 32;
+					const READ_BYTE_COUNT = 16;
 
 					let hexString = "";
 					let codeHexString = "";
@@ -170,13 +170,24 @@
 						hexString += "<br>"
 						i += READ_BYTE_COUNT
 
+						let line = "";
+						let lineReadable = "";
 						for (let j = 0; j < byteSlice.length;) {
-							const byteSlice2Byte = byteSlice.slice(j, j + 1);
-							codeHexString += bytesToHex(byteSlice2Byte);
-							codeHexString += ' ';
+							const byteSlice1Byte = byteSlice.slice(j, j + 1);
+							line += bytesToHex(byteSlice1Byte);
+							line += ' ';
+							if ((byteSlice1Byte >= 0x20) && (byteSlice1Byte <= 0x7E)) {
+								lineReadable += byteToString(byteSlice1Byte);
+							} else {
+								lineReadable += ".";
+							}
 							j += 1;
 						}
-						codeHexString += '\n';
+						
+						let blankString = "                                                "; // 48 ' '
+						let spaceCount = READ_BYTE_COUNT*3 + 4 - line.length;
+						// codeHexString += line + "    " + lineReadable + '\n';
+						codeHexString += line + blankString.slice(0, spaceCount) + lineReadable + '\n';
 
 						let readPercent = i / bytes.length * 100;
 						if (readPercent > 100) {
